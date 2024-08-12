@@ -16,7 +16,7 @@ class FirstPage extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
           ),
           child: SizedBox(
-            width: 120,
+            width: 100,
             height: 120, child: Icon(Icons.person, size: 60,)),
         ),
         Padding(padding: EdgeInsets.only(top: 10)),
@@ -30,27 +30,28 @@ class FirstPage extends StatelessWidget {
     return Scaffold(
       body: Center(
         child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const MainVector(height: 200, width: 200),
-              const Padding(padding: EdgeInsets.only(bottom: 200)),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  createLoginBox("Admin", () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) {
-                      return LoginPage(pageName: "Admin", onSubmit: () => {});
-                    }));
-                  }),
-                  const Padding(padding: EdgeInsets.only(left: 30, right: 30)),
-                  createLoginBox("Member", () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) {
-                      return LoginPage(pageName: "Member", onSubmit: () => {});
-                    }));
-                  })
-                ],
-              )
-            ]),
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const MainVector(height: 200, width: 200),
+                const Padding(padding: EdgeInsets.only(bottom: 200)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    createLoginBox("Admin", () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return LoginPage(pageName: "Admin", onSubmit: () => {});
+                      }));
+                    }),
+                    const Padding(padding: EdgeInsets.only(left: 10, right: 10)),
+                    createLoginBox("Member", () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return LoginPage(pageName: "Member", onSubmit: () => {});
+                      }));
+                    })
+                  ],
+                )
+              ]),
+        
       ),
     );
   }

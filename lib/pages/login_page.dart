@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kcarv_front/pages/announcements.dart';
 import 'package:kcarv_front/utils/main_vector.dart';
 
 class LoginPage extends StatelessWidget {
@@ -49,7 +50,13 @@ class LoginPage extends StatelessWidget {
             height: 40,
           ),
           ElevatedButton(
-              onPressed: onSubmit,
+            //Changed the on pressed function temporarily for checking the working of announcements page
+              onPressed: () => Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context){
+                  return const Announcements();
+                })
+              ),
               style: ElevatedButton.styleFrom(
                   iconColor: Colors.grey,
                   backgroundColor: Colors.black87,
