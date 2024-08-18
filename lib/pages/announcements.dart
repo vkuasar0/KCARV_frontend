@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:kcarv_front/data/verticals.dart';
-import 'package:kcarv_front/models/clubVertical.dart';
 import 'package:kcarv_front/pages/new_announcement.dart';
 import 'package:kcarv_front/models/announcement.dart';
 import 'package:kcarv_front/pages/sidebar.dart';
+import 'package:http/http.dart' as http;
+import 'package:kcarv_front/models/clubVertical.dart';
 
 
 class Announcements extends StatefulWidget {
@@ -16,26 +19,121 @@ class Announcements extends StatefulWidget {
 }
 
 class _AnnouncementsState extends State<Announcements> {
+
+  List<Announcement> announcements = [];
+  bool isLoading=true;
+  String? error;
+
+  Verticals verticalFromString(String verticalString) {
+  switch (verticalString.toLowerCase()) {
+    case 'acting':
+      return Verticals.acting;
+    case 'script':
+      return Verticals.script;
+    case 'production_design':
+      return Verticals.production_design;
+    case 'technical':
+      return Verticals.technical;
+    case 'music':
+      return Verticals.music;
+    case 'media':
+      return Verticals.media;
+    case 'all':
+      return Verticals.all;
+    default:
+      throw ArgumentError('Invalid vertical string: $verticalString');
+  }
+}
+
+  void _new_announcement (BuildContext context) async {
+    final _newA = await Navigator.push(context, MaterialPageRoute(builder: (cntxt){
+            return const NewAnnouncement();
+          }));
+    if(_newA==null){
+      return;
+    }
+    setState(() {
+      announcements.add(_newA);
+    });
+  }
+  
+  @override
+  void initState() {
+    super.initState();
+    _load_announcement();
+  }
+
+  void _load_announcement() async {
+    final url = Uri.https('kcarv-backend.onrender.com', '/api/announcements');
+    try{
+      
+      final response = await http.get(url);
+
+      if(response.statusCode>=400){
+        setState(() {
+          error = "Oops! Something went wrong, couldn't load announcements";
+          isLoading = false;
+        });
+        return;
+      }
+
+      if(response.body.isEmpty){
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      final List<dynamic> res = json.decode(response.body);
+      final List<Announcement> init_items = [];
+      for (final items in res){
+        Verticals vert;
+        if(items['vertical']!=null) vert = verticalFromString(items['vertical']);
+        else vert = Verticals.all;
+        if(items['title']!=null && items['content']!=null)
+        init_items.add(Announcement(title: items['title'], description: items['content'], vertical: verticals[vert]!));
+      }
+
+      setState(() {
+        announcements = init_items;
+        isLoading = false;
+      });
+
+    }
+    catch(e){
+      setState(() {
+        error = "Check your internet connection";
+        isLoading = false;
+      });
+    }
+  }
+
+  void _remove_announcement () async {
+    
+  }
+
+
   @override
   Widget build(BuildContext context) {
 
-    final List<Announcement> announcements = [
-      Announcement(text: "This is a dummy announcement", vertical: verticals[Verticals.acting]!)
-    ];
+    var content = const Center(child: Text("There are no Announcements"),);
 
+    if(isLoading){
+      content = const Center(child: CircularProgressIndicator(),);
+    }
+
+    if(error!=null){
+      content = Center(child: Text(error!),);
+    }
+
+    
     return Scaffold(
       appBar: AppBar(
-        // leading: Builder(builder: (BuildContext context){
-        //   return IconButton(
-        //   onPressed: () => Scaffold.of(context).openDrawer(), 
-        //   icon: const Icon(Icons.menu)
-        //   );
-        // }),
         title: const Text("Announcements"),
         centerTitle: true,
       ),
       drawer: Sidebar(isAdmin: widget.isadmin),
-      body: announcements.isEmpty? const Center(child: Text("No Announcements yet"),) : ListView.builder(
+      body: announcements.isEmpty? content : ListView.builder(
         itemCount: announcements.length,
         itemBuilder: (context, index){
           return Container(
@@ -54,7 +152,7 @@ class _AnnouncementsState extends State<Announcements> {
               ],
             ),
             child: Text(
-              announcements[index].text,
+              announcements[index].title,
               style: const TextStyle(fontSize: 16),
             )
           );
@@ -64,9 +162,7 @@ class _AnnouncementsState extends State<Announcements> {
       floatingActionButton: Visibility(
         visible: widget.isadmin,
         child: FloatingActionButton(
-          onPressed: ()=>Navigator.push(context, MaterialPageRoute(builder: (context){
-            return NewAnnouncement();
-          })),
+          onPressed: () => isLoading? (){} : _new_announcement(context),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12)
           ),

@@ -6,7 +6,7 @@ final verticals =  {
     "Acting",
     Color.fromARGB(255, 0, 255, 128),
   ),
-  Verticals.pd : const clubVertical(
+  Verticals.production_design : const clubVertical(
     "Production Design",
     Color.fromARGB(255, 145, 255, 0),
   ),
@@ -17,5 +17,17 @@ final verticals =  {
   Verticals.technical : const clubVertical(
     "Technical",
     Color.fromARGB(255, 0, 208, 255),
+  ),
+  Verticals.music : const clubVertical(
+    "Music", 
+    Color.fromARGB(255, 0, 60, 255)
+  ),
+  Verticals.media : const clubVertical(
+    "Media", 
+    Color.fromARGB(255, 255, 149, 0),
+  ),
+  Verticals.all : const clubVertical(
+    "General", 
+    Color.fromARGB(255, 255, 255, 255),
   )
 };

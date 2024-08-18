@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 enum Verticals {
   acting,
   script,
-  pd,
-  technical
+  production_design,
+  technical,
+  music,
+  media,
+  all
 }
 
 class clubVertical extends StatelessWidget {
