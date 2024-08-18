@@ -1,77 +1,121 @@
 import 'package:flutter/material.dart';
-import 'package:kcarv_front/pages/announcements.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'package:kcarv_front/providers/auth_provider.dart';
 import 'package:kcarv_front/utils/main_vector.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   final String pageName;
   final void Function() onSubmit;
   const LoginPage({super.key, required this.pageName, required this.onSubmit});
 
   @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  bool _isLoading = false;
+  @override
   Widget build(BuildContext context) {
     TextEditingController usernameController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
+
+    Future<void> _login() async {
+      setState(() {
+        _isLoading = true;
+      });
+      final String apiUrl = widget.pageName == "Admin"
+          ? 'https://kcarv-backend.onrender.com/api/login/admin'
+          : 'https://kcarv-backend.onrender.com/api/login/member';
+
+      try {
+        // Create the request body
+        var body = jsonEncode({
+          'email': usernameController.text,
+          'password': passwordController.text
+        });
+
+        // Send POST request to login endpoint
+        var response = await http.post(
+          Uri.parse(apiUrl),
+          headers: {"Content-Type": "application/json"},
+          body: body,
+        );
+
+        // Check if the login was successful
+        if (response.statusCode == 200) {
+          var data = jsonDecode(response.body);
+          String token = data['token']; // Assuming the token is returned in the response body
+
+          await context.read<AuthProvider>().login(token, widget.pageName);
+          Navigator.of(context).pop();
+        } else {
+          // Handle login failure (show error message)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Login failed: ${response.body}')),
+          );
+        }
+      } catch (error) {
+        // Handle network or other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $error')),
+        );
+      }
+      setState(() {
+        _isLoading = false;
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(),
       body: SingleChildScrollView(
-        child: Column(
+        child: _isLoading? const Center(child: CircularProgressIndicator()): Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Center(child: MainVector(height: 150, width: 150)),
-            const SizedBox(
-              height: 20,
-            ),
-            Text(
-              pageName,
-              style: const TextStyle(fontSize: 25),
-            ),
-            const SizedBox(
-              height: 40,
-            ),
+            const SizedBox(height: 20),
+            Text(widget.pageName, style: const TextStyle(fontSize: 25)),
+            const SizedBox(height: 40),
             Padding(
-                padding: const EdgeInsets.only(left: 30, right: 30),
-                child: FormField(
-                  controller: usernameController,
-                  hintText: "UserName",
-                  icon: Icons.person,
-                  obscureText: false,
-                )),
-            const SizedBox(
-              height: 40,
+              padding: const EdgeInsets.only(left: 30, right: 30),
+              child: FormField(
+                controller: usernameController,
+                hintText: "Username",
+                icon: Icons.person,
+                obscureText: false,
+              ),
             ),
+            const SizedBox(height: 40),
             Padding(
-                padding: const EdgeInsets.only(left: 30, right: 30),
-                child: FormField(
-                  controller: passwordController,
-                  hintText: "Password",
-                  icon: Icons.lock,
-                  obscureText: true,
-                )),
-            const SizedBox(
-              height: 40,
+              padding: const EdgeInsets.only(left: 30, right: 30),
+              child: FormField(
+                controller: passwordController,
+                hintText: "Password",
+                icon: Icons.lock,
+                obscureText: true,
+              ),
             ),
+            const SizedBox(height: 40),
             ElevatedButton(
-              //Changed the on pressed function temporarily for checking the working of announcements page
-                onPressed: () => Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (context){
-                    return pageName=="Admin"? Announcements(isadmin: true): Announcements(isadmin: false);
-                  })
+              onPressed: _login, // Trigger login on button press
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black87,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                style: ElevatedButton.styleFrom(
-                    iconColor: Colors.grey,
-                    backgroundColor: Colors.black87,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15))),
-                child: const SizedBox(
-                    width: 300,
-                    height: 50,
-                    child: Center(
-                      child: Text(
-                        "Sign In",
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                    )))
+              ),
+              child: const SizedBox(
+                width: 300,
+                height: 50,
+                child: Center(
+                  child: Text(
+                    "Sign In",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
