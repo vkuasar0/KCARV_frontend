@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kcarv_front/data/verticals.dart';
+import 'package:kcarv_front/models/announcement.dart';
+import 'package:kcarv_front/models/clubVertical.dart';
 
 class NewAnnouncement extends StatefulWidget {
   const NewAnnouncement({super.key});
@@ -10,6 +12,21 @@ class NewAnnouncement extends StatefulWidget {
 
 class _NewAnnouncementState extends State<NewAnnouncement> {
   final _formkey = GlobalKey<FormState>();
+  bool isSaving = false;
+  var enteredText = '';
+  clubVertical? enteredVertical;
+
+  void _saveItem () async {
+    if(_formkey.currentState!.validate()){
+      _formkey.currentState!.save();
+      setState(() {
+        isSaving = true;
+      });
+      Navigator.of(context).pop(
+        Announcement(text: enteredText, vertical: enteredVertical!)
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +44,13 @@ class _NewAnnouncementState extends State<NewAnnouncement> {
                 decoration: const InputDecoration(
                   label: Text("Text")
                 ),
+                validator: (value){
+                  if(value==null || value.length==0) return "Text cannot be empty";
+                  return null;
+                },
+                onSaved: (value){
+                  enteredText = value!;
+                },
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField(
@@ -50,24 +74,34 @@ class _NewAnnouncementState extends State<NewAnnouncement> {
                       ),
                     )
                 ],
+                validator: (value){
+                  if(value==null) return "Please select a valid vertical type";
+                  return null;
+                },
                 onChanged: (value){
-
+                  setState(() {
+                    enteredVertical = value;
+                  });
                 },
               ),
-              const SizedBox(height: 8,),
+              const SizedBox(height: 10,),
               Row(
                 children: [
-                  ElevatedButton(
-                    onPressed: (){},
-                    child: const Text("Save"),
-                  ),
-                  const SizedBox(width: 10,),
-                  ElevatedButton(
-                    onPressed: (){
+                  TextButton(
+                    onPressed: isSaving? null:(){
                       _formkey.currentState!.reset();
                     }, 
                     child: const Text("Clear")
-                  )
+                  ),
+                  const SizedBox(width: 10,),
+                  ElevatedButton(
+                    onPressed: isSaving? null : _saveItem,
+                    child: (isSaving)? const SizedBox(
+                      width: 15,
+                      height: 15,
+                      child: CircularProgressIndicator(),
+                    ) : const Text("Save")
+                  ),
                 ],
               )
             ],
