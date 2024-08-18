@@ -37,9 +37,10 @@ class _NewAnnouncementState extends State<NewAnnouncement> {
               'content': enteredDesc,
               'vertical': verticalString,
             }));
-
+        
         Navigator.of(context).pop(
           Announcement(
+            id : response.body,
             title: enteredTitle,
             description: enteredDesc,
             vertical: verticals[enteredVertical]!,
