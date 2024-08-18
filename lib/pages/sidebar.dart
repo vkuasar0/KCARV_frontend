@@ -14,6 +14,8 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    String email = authProvider.email ?? "No Email";
     return Drawer(
       child: ListView(
         children: <Widget>[
@@ -68,6 +70,7 @@ class Sidebar extends StatelessWidget {
                   Navigator.of(context).pushReplacement(MaterialPageRoute(
                     builder: (context) => Profile(
                       isadmin: isAdmin,
+                      email: email,
                     ),
                   ));
                 },

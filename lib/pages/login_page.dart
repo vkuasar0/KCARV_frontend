@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
           var data = jsonDecode(response.body);
           String token = data['token']; // Assuming the token is returned in the response body
 
-          await context.read<AuthProvider>().login(token, widget.pageName);
+          await context.read<AuthProvider>().login(token, widget.pageName, usernameController.text);
           Navigator.of(context).pop();
         } else {
           // Handle login failure (show error message)
@@ -69,8 +69,8 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       appBar: AppBar(),
-      body: SingleChildScrollView(
-        child: _isLoading? const Center(child: CircularProgressIndicator()): Column(
+      body: _isLoading? const Center(child: CircularProgressIndicator()): SingleChildScrollView(
+        child:  Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Center(child: MainVector(height: 150, width: 150)),
