@@ -3,6 +3,8 @@ import 'package:kcarv_front/pages/announcements.dart';
 import 'package:kcarv_front/pages/events.dart';
 import 'package:kcarv_front/pages/inventory.dart';
 import 'package:kcarv_front/pages/profile.dart';
+import 'package:provider/provider.dart';
+import 'package:kcarv_front/providers/auth_provider.dart';
 
 
 class Sidebar extends StatelessWidget {
@@ -74,7 +76,9 @@ class Sidebar extends StatelessWidget {
             Divider(),
             ListTile(
               title: TextButton.icon(
-                onPressed: (){}, 
+                onPressed: () async {
+                  await Provider.of<AuthProvider>(context, listen: false).logout();
+                }, 
                 icon: const Icon(Icons.logout), 
                 label: const Text("Log out")
               ),

@@ -1,24 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:kcarv_front/pages/first_page.dart';
+import 'package:provider/provider.dart';
+import 'package:kcarv_front/providers/auth_provider.dart';
+import 'package:kcarv_front/pages/announcements.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => AuthProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'KCARV App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
-        useMaterial3: true,
-      ),
-      home: const FirstPage(),
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Flutter Demo',
+          home: authProvider.jwt == null
+              ? const FirstPage()
+              : Announcements(isadmin: authProvider.loginType == 'Admin'? true: false)
+        );
+      },
     );
   }
 }
