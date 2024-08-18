@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:kcarv_front/pages/new_announcement.dart';
 
 class Announcements extends StatelessWidget {
-  const Announcements({super.key});
+  const Announcements({super.key, required this.isadmin});
+
+  final bool isadmin;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +51,18 @@ class Announcements extends StatelessWidget {
           );
         },
         scrollDirection: Axis.vertical,
+      ),
+      floatingActionButton: Visibility(
+        visible: isadmin,
+        child: FloatingActionButton(
+          onPressed: ()=>Navigator.push(context, MaterialPageRoute(builder: (context){
+            return NewAnnouncement();
+          })),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12)
+          ),
+          child: const Icon(Icons.add)
+        ),
       ),
     );
   }

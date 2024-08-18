@@ -54,7 +54,7 @@ class LoginPage extends StatelessWidget {
               onPressed: () => Navigator.push(
                 context, 
                 MaterialPageRoute(builder: (context){
-                  return const Announcements();
+                  return pageName=="Admin"? Announcements(isadmin: true): Announcements(isadmin: false);
                 })
               ),
               style: ElevatedButton.styleFrom(
