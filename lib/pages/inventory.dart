@@ -2,6 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:kcarv_front/pages/sidebar.dart';
+import 'package:kcarv_front/pages/borrow_requests.dart';
+import 'package:kcarv_front/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:kcarv_front/pages/my_borrow_requests.dart';
 
 class PDItem {
   final String id;
@@ -12,8 +16,7 @@ class PDItem {
 
   factory PDItem.fromJson(Map<String, dynamic> json) {
     return PDItem(
-      id: json['id']
-          .toString(), // Assuming '_id' is the field name for the item ID
+      id: json['id'].toString(),
       name: json['name'],
       description: json['description'],
     );
@@ -30,12 +33,11 @@ class PDInventoryPage extends StatefulWidget {
 
 class _PDInventoryPageState extends State<PDInventoryPage> {
   List<PDItem> pdItems = [];
-  bool isAddingItem = false; // To toggle between grid view and add item form
+  bool isAddingItem = false;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   Widget indicator = const CircularProgressIndicator();
-  PDItem?
-      selectedItem; // For displaying the hovering widget when an item is clicked
+  PDItem? selectedItem;
 
   @override
   void initState() {
@@ -54,7 +56,6 @@ class _PDInventoryPageState extends State<PDInventoryPage> {
         indicator = const Text("No PD Items");
       });
     } else {
-      // Handle errors if any
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load items')),
       );
@@ -75,15 +76,12 @@ class _PDInventoryPageState extends State<PDInventoryPage> {
     );
 
     if (response.statusCode == 201) {
-      // Clear input fields
       nameController.clear();
       descriptionController.clear();
-
-      // Reload the grid view by fetching updated data
       await fetchPDItems();
 
       setState(() {
-        isAddingItem = false; // Close the form after adding
+        isAddingItem = false;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -113,7 +111,7 @@ class _PDInventoryPageState extends State<PDInventoryPage> {
     if (response.statusCode == 200) {
       await fetchPDItems();
       setState(() {
-        selectedItem = null; // Close the hovering widget after editing
+        selectedItem = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Item edited successfully')),
@@ -130,10 +128,10 @@ class _PDInventoryPageState extends State<PDInventoryPage> {
         Uri.parse('https://kcarv-backend.onrender.com/api/pd-items/$id');
     final response = await http.delete(url);
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 204) {
       await fetchPDItems();
       setState(() {
-        selectedItem = null; // Close the hovering widget after deletion
+        selectedItem = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Item deleted successfully')),
@@ -145,11 +143,49 @@ class _PDInventoryPageState extends State<PDInventoryPage> {
     }
   }
 
+  Future<void> borrowPDItem(String id) async {
+    final url = Uri.parse('https://kcarv-backend.onrender.com/api/borrow');
+    final token = Provider.of<AuthProvider>(context, listen: false).jwt;
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'authorization': token!
+      },
+      body: json.encode({'itemId': id}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Borrow request submitted')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['message'])),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('PD Inventory'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.list_alt),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MyBorrowRequestsPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       drawer: Sidebar(isAdmin: widget.isAdmin),
       body: Stack(
@@ -162,11 +198,25 @@ class _PDInventoryPageState extends State<PDInventoryPage> {
           ? FloatingActionButton(
               onPressed: () {
                 setState(() {
-                  isAddingItem =
-                      !isAddingItem; // Toggle between grid view and add form
+                  isAddingItem = !isAddingItem;
                 });
               },
               child: Icon(isAddingItem ? Icons.close : Icons.add),
+            )
+          : null,
+      bottomNavigationBar: widget.isAdmin
+          ? BottomAppBar(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BorrowRequestsPage(),
+                    ),
+                  );
+                },
+                child: const Text('Borrow Requests'),
+              ),
             )
           : null,
     );
@@ -262,34 +312,45 @@ class _PDInventoryPageState extends State<PDInventoryPage> {
       ),
       const SizedBox(height: 10),
       Text(item.description),
-      const SizedBox(height: 20)
+      const SizedBox(height: 20),
+      ElevatedButton(
+        onPressed: () {
+          borrowPDItem(item.id);
+        },
+        child: const Text('Borrow'),
+      ),
     ];
+
     if (widget.isAdmin) {
-      hoveringList
-          .add(Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-        ElevatedButton(
-          onPressed: () {
-            // Pre-fill the form fields with existing data for editing
-            nameController.text = item.name;
-            descriptionController.text = item.description;
-            setState(() {
-              isAddingItem = true;
-              selectedItem = null; // Hide the hover widget
-            });
-          },
-          child: const Text('Edit'),
+      hoveringList.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                nameController.text = item.name;
+                descriptionController.text = item.description;
+                setState(() {
+                  isAddingItem = true;
+                  selectedItem = null;
+                });
+              },
+              child: const Text('Edit'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                deletePDItem(item.id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
         ),
-        ElevatedButton(
-          onPressed: () {
-            deletePDItem(item.id);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-          ),
-          child: const Text('Delete'),
-        ),
-      ]));
+      );
     }
+
     return Positioned(
       top: 100,
       left: 50,
@@ -303,14 +364,12 @@ class _PDInventoryPageState extends State<PDInventoryPage> {
               selectedItem = null;
             });
           },
-          child: Container(
+          child: Padding(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: hoveringList,
             ),
-            child:
-                Column(mainAxisSize: MainAxisSize.min, children: hoveringList),
           ),
         ),
       ),

@@ -15,11 +15,11 @@ class FirstPage extends StatelessWidget {
             backgroundColor: Colors.black87,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
           ),
-          child: SizedBox(
+          child: const SizedBox(
             width: 100,
             height: 120, child: Icon(Icons.person, size: 60,)),
         ),
-        Padding(padding: EdgeInsets.only(top: 10)),
+        const Padding(padding: EdgeInsets.only(top: 10)),
         Text(name)
       ],
     );

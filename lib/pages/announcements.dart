@@ -44,15 +44,15 @@ class _AnnouncementsState extends State<Announcements> {
   }
 
   void _new_announcement(BuildContext context) async {
-    final _newA =
+    final newA =
         await Navigator.push(context, MaterialPageRoute(builder: (cntxt) {
       return const NewAnnouncement();
     }));
-    if (_newA == null) {
+    if (newA == null) {
       return;
     }
     setState(() {
-      announcements.add(_newA);
+      announcements.add(newA);
     });
   }
 
@@ -83,31 +83,31 @@ class _AnnouncementsState extends State<Announcements> {
       }
 
       final List<dynamic> res = json.decode(response.body);
-      final List<Announcement> init_items = [];
+      final List<Announcement> initItems = [];
       for (final items in res) {
         Verticals vert;
-        if (items['vertical'] != null)
+        if (items['vertical'] != null) {
           vert = verticalFromString(items['vertical']);
-        else
+        } else {
           vert = Verticals.all;
+        }
         if (items['title'] != null &&
             items['content'] != null &&
-            items['id'] != null)
-          init_items.add(Announcement(
+            items['id'] != null) {
+          initItems.add(Announcement(
               id: items['id'].toString(),
               title: items['title'],
               description: items['content'],
               vertical: verticals[vert]!));
+        }
       }
 
       setState(() {
-        announcements = init_items;
+        announcements = initItems;
         isLoading = false;
       });
     } catch (e) {
       setState(() {
-        error = "Check your internet connection";
-        print(e);
         isLoading = false;
       });
     }
@@ -124,7 +124,6 @@ class _AnnouncementsState extends State<Announcements> {
     final response = await http.delete(url);
 
     if (response.statusCode >= 400) {
-      print("not deleted so reverting back.....");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content:
@@ -212,9 +211,22 @@ class _AnnouncementsState extends State<Announcements> {
                           ),
                         ],
                       ),
-                      child: Text(
-                        announcements[index].title,
-                        style: const TextStyle(fontSize: 16),
+                      child: Column(
+                        children: [
+                          Text(
+                            announcements[index].vertical.verticalName,
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            announcements[index].title,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            announcements[index].description,
+                            style: const TextStyle(fontSize: 12),
+                          )
+                        ],
                       )),
                 );
               },

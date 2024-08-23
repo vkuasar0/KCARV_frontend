@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
     TextEditingController usernameController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
 
-    Future<void> _login() async {
+    Future<void> login() async {
       setState(() {
         _isLoading = true;
       });
@@ -98,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: _login, // Trigger login on button press
+              onPressed: login, // Trigger login on button press
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black87,
                 shape: RoundedRectangleBorder(

@@ -20,7 +20,7 @@ final verticals =  {
   ),
   Verticals.music : const clubVertical(
     "Music", 
-    Color.fromARGB(255, 0, 60, 255)
+    Colors.grey
   ),
   Verticals.media : const clubVertical(
     "Media", 

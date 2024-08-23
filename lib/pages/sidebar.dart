@@ -14,16 +14,12 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    String email = authProvider.email ?? "No Email";
     return Drawer(
       child: ListView(
         children: <Widget>[
           DrawerHeader(
               child: Image.asset(
             'assets/images/Logonobackground1.png',
-            height: 20,
-            width: 20,
             fit: BoxFit.contain,
           )),
           ListTile(
@@ -42,10 +38,7 @@ class Sidebar extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).pop(); // Close the drawer
                   Navigator.of(context).pushReplacement(MaterialPageRoute(
-                    builder: (context) => Events(
-                      isadmin: isAdmin,
-                    ),
-                  ));
+                      builder: (context) => EventsPage(isAdmin: isAdmin)));
                 },
                 icon: const Icon(Icons.event),
                 label: const Text("Events")),
@@ -69,15 +62,14 @@ class Sidebar extends StatelessWidget {
                   Navigator.of(context).pop(); // Close the drawer
                   Navigator.of(context).pushReplacement(MaterialPageRoute(
                     builder: (context) => Profile(
-                      isadmin: isAdmin,
-                      email: email,
+                      isAdmin: isAdmin,
                     ),
                   ));
                 },
                 icon: const Icon(Icons.person),
                 label: const Text("Profile")),
           ),
-          Divider(),
+          const Divider(),
           ListTile(
             title: TextButton.icon(
                 onPressed: () async {

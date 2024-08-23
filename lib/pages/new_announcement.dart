@@ -47,9 +47,8 @@ class _NewAnnouncementState extends State<NewAnnouncement> {
           ),
         );
       } catch (e) {
-        print(e);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save the announcement.')),
+          const SnackBar(content: Text('Failed to save the announcement.')),
         );
       }
 
@@ -66,7 +65,7 @@ class _NewAnnouncementState extends State<NewAnnouncement> {
         title: const Text("Add an announcement"),
       ),
       body: Padding(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         child: Form(
           key: _formkey,
           child: Column(
@@ -74,8 +73,9 @@ class _NewAnnouncementState extends State<NewAnnouncement> {
               TextFormField(
                 decoration: const InputDecoration(label: Text("Title")),
                 validator: (value) {
-                  if (value == null || value.length == 0)
+                  if (value == null || value.isEmpty) {
                     return "Title cannot be empty";
+                  }
                   return null;
                 },
                 onSaved: (value) {
@@ -86,8 +86,9 @@ class _NewAnnouncementState extends State<NewAnnouncement> {
               TextFormField(
                 decoration: const InputDecoration(label: Text("Description")),
                 validator: (value) {
-                  if (value == null || value.length == 0)
+                  if (value == null || value.isEmpty) {
                     return "Description cannot be empty";
+                  }
                   return null;
                 },
                 onSaved: (value) {
@@ -116,8 +117,9 @@ class _NewAnnouncementState extends State<NewAnnouncement> {
                     )
                 ],
                 validator: (value) {
-                  if (value == null)
+                  if (value == null) {
                     return "Please select a valid vertical type";
+                  }
                   return null;
                 },
                 onChanged: (value) {

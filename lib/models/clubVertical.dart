@@ -11,7 +11,7 @@ enum Verticals {
 }
 
 class clubVertical extends StatelessWidget {
-  const clubVertical(this.verticalName, this.colorCode);
+  const clubVertical(this.verticalName, this.colorCode, {super.key});
 
   final String verticalName;
   final Color colorCode;
