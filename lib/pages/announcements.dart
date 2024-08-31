@@ -7,6 +7,8 @@ import 'package:kcarv_front/models/announcement.dart';
 import 'package:kcarv_front/pages/sidebar.dart';
 import 'package:http/http.dart' as http;
 import 'package:kcarv_front/models/clubVertical.dart';
+import 'package:kcarv_front/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class Announcements extends StatefulWidget {
   const Announcements({super.key, required this.isadmin});
@@ -121,20 +123,34 @@ class _AnnouncementsState extends State<Announcements> {
     final url =
         Uri.https('kcarv-backend.onrender.com', '/api/announcements/${an.id}');
 
-    final response = await http.delete(url);
+    final response = await http.delete(
+      headers: {'authorization': Provider.of<AuthProvider>(context, listen: false).jwt!},
+      url
+    );
 
     if (response.statusCode >= 400) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text("Something went wrong. Could not delete the announcement."),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
+      if(response.statusCode == 403){
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("You are not an Admin!"),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          )
+        );
+      }
+      else{
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text("Something went wrong. Could not delete the announcement."),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
         ),
-      );
+        );
+      }
       setState(() {
-        announcements.add(an);
-      });
+          announcements.add(an);
+        });
     }
   }
 
