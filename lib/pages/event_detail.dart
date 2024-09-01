@@ -4,9 +4,10 @@ import 'dart:convert';
 import 'package:csv/csv.dart';
 import 'package:kcarv_front/models/event.dart';
 import 'package:http/http.dart' as http;
-import 'package:kcarv_front/utils/dateFormatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:kcarv_front/utils/data_table.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class EventDetailPage extends StatefulWidget {
   final Event event;
@@ -18,32 +19,37 @@ class EventDetailPage extends StatefulWidget {
 }
 
 class _EventDetailPageState extends State<EventDetailPage> {
-  late TextEditingController participantsController;
   late TextEditingController libraryController;
+  late EditableDataTable _editableDataTable;
+  final GlobalKey<EditableDataTableState> globalKey =
+      GlobalKey<EditableDataTableState>();
 
   @override
   void initState() {
     super.initState();
-    participantsController =
-        TextEditingController(text: widget.event.participants.join(', '));
     libraryController =
         TextEditingController(text: widget.event.library.join(', '));
+    _editableDataTable = EditableDataTable(
+        key: globalKey, participants: widget.event.participants);
   }
 
   Future<void> updateParticipants() async {
     final url = Uri.parse(
         'https://kcarv-backend.onrender.com/api/events/${widget.event.id}/participants');
+    final newTable = _editableDataTable.participants;
     final response = await http.put(url,
         headers: {'Content-Type': 'application/json'},
-        body: json
-            .encode({'participants': participantsController.text.split(', ')}));
+        body: json.encode({'participants': newTable}));
     final data = json.decode(response.body);
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Participants updated successfully')),
       );
       setState(() {
-        widget.event.participants = participantsController.text.split(', ');
+        widget.event.participants = newTable;
+        globalKey.currentState?.setState(() {
+          globalKey.currentState!.isEditable = false;
+        });
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,22 +82,30 @@ class _EventDetailPageState extends State<EventDetailPage> {
 
   Future<void> downloadParticipants() async {
     try {
-      // Convert participants to CSV format
-      final csvData =
-          const ListToCsvConverter().convert([widget.event.participants]);
+      if (Platform.isAndroid) {
+        final status = await Permission.storage.request();
+        if (status != PermissionStatus.granted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Storage permission denied')),
+          );
+          return;
+        }
+      }
 
-      // Open file save dialog for user to pick location and name
+      List<List<String>> csvData = widget.event.participants;
+      final csvString = const ListToCsvConverter().convert(csvData);
+
       final result = await FilePicker.platform.saveFile(
-          fileName: "${widget.event.title}.csv",
-          dialogTitle: 'Save Participants CSV',
-          type: FileType.custom,
-          allowedExtensions: ['csv'],
-          lockParentWindow: true);
+        fileName: "${widget.event.title}.csv",
+        dialogTitle: 'Save Participants CSV',
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
 
       if (result != null) {
         // User picked a file name and location
         final file = File(result);
-        await file.writeAsString(csvData);
+        await file.writeAsString(csvString);
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -131,38 +145,39 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     ),
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 40, bottom: 40, right: 40),
+                padding: const EdgeInsets.only(left: 10, bottom: 40, right: 10),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30)
-                  ),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30)),
                   child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 16,),
-                        _buildLibrarySection(),
-                        const SizedBox(height: 16.0),
-                        _buildParticipantsSection(),
-                        const SizedBox(height: 16.0),
-                        const Text(
-                          'Date',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20
-                          ),
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      _buildLibrarySection(),
+                      const SizedBox(height: 16.0),
+                      _buildParticipantsSection(),
+                      const SizedBox(height: 16.0),
+                      const Text(
+                        'Date',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        '${widget.event.date.substring(0, 10)} - ${widget.event.status}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
                         ),
-                        const SizedBox(height: 4.0),
-                        Text(
-                          '${formatter(widget.event)} - ${widget.event.status}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16.0,
-                          ),
-                        ),
-                        const SizedBox(height: 16,)
-                      ],
-                    ),
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      )
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -179,23 +194,19 @@ class _EventDetailPageState extends State<EventDetailPage> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         Container(
-          padding: const EdgeInsets.all(10),
-          width: 200,
+          width: double.infinity,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Text(widget.event.participants.join('\n')),
+          child: _editableDataTable,
         ),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
-              onPressed: () => _showEditDialog(
-                  'Participants', participantsController, updateParticipants),
-              child: const Text('Edit'),
-            ),
+                onPressed: updateParticipants, child: Text('Save Changes')),
             const SizedBox(width: 10),
             ElevatedButton(
               onPressed: downloadParticipants,
@@ -248,9 +259,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
 
   void _launchURL(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
+    try{
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+    } catch(e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Couldn\'t find an app to to launch this link')));
     }
