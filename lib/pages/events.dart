@@ -77,6 +77,9 @@ class _EventsPageState extends State<EventsPage> {
         const SnackBar(content: Text('Failed to create event')),
       );
     }
+    setState(() {
+      _image = null;
+    });
   }
 
   Future<void> _pickImage () async {

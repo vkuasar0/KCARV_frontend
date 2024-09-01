@@ -259,7 +259,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
   Widget _buildImageThumbnail() {
     String? thumbnail = widget.event.thumbnail;
     if (thumbnail != null) {
-      return Image.network(thumbnail, fit: BoxFit.fill);
+      return Image.network(thumbnail, fit: BoxFit.contain);
     } else {
       return const Center(child: Text('No Image for this event'));
     }
