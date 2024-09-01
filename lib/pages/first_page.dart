@@ -12,15 +12,15 @@ class FirstPage extends StatelessWidget {
           onPressed: onClick,
           style: ElevatedButton.styleFrom(
             iconColor: Colors.grey,
-            backgroundColor: Colors.black87,
+            backgroundColor: Colors.grey[350],
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
           ),
           child: const SizedBox(
             width: 100,
-            height: 120, child: Icon(Icons.person, size: 60,)),
+            height: 120, child: Icon(Icons.person, size: 60, color: Colors.black87,)),
         ),
         const Padding(padding: EdgeInsets.only(top: 10)),
-        Text(name)
+        Text(name, style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),)
       ],
     );
   }
@@ -28,12 +28,15 @@ class FirstPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(image: AssetImage('assets/images/firstpageBackground.jpeg'), fit: BoxFit.fill),
+        ),
         child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 const MainVector(height: 200, width: 200),
-                const Padding(padding: EdgeInsets.only(bottom: 200)),
+                const Padding(padding: EdgeInsets.only(bottom: 50)),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
