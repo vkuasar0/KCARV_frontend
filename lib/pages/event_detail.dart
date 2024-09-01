@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:csv/csv.dart';
 import 'package:kcarv_front/models/event.dart';
 import 'package:http/http.dart' as http;
+import 'package:kcarv_front/utils/dateFormatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -153,7 +154,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ),
                         const SizedBox(height: 4.0),
                         Text(
-                          '${widget.event.date.substring(0, 10)} - ${widget.event.status}',
+                          '${formatter(widget.event)} - ${widget.event.status}',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16.0,

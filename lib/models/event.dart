@@ -23,8 +23,8 @@ class Event {
       title: json['title'],
       date: json['date'],
       status: json['status'],
-      participants: List<String>.from(json['participants']),
-      library: List<String>.from(json['library']),
+      participants: List<String>.from(json['participants'].map((el)=>el.toString())),
+      library: List<String>.from(json['library'].map((el)=>el.toString())),
       thumbnail: json['thumbnail']
     );
   }

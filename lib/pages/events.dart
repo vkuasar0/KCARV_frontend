@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:kcarv_front/models/event.dart';
 import 'package:kcarv_front/pages/event_detail.dart';
 import 'package:kcarv_front/pages/sidebar.dart';
+import 'package:kcarv_front/utils/dateFormatter.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EventsPage extends StatefulWidget {
   final bool isAdmin;
@@ -17,6 +20,7 @@ class EventsPage extends StatefulWidget {
 class _EventsPageState extends State<EventsPage> {
   List<Event> events = [];
   bool isLoading = true;
+  File? _image;
 
   @override
   void initState() {
@@ -48,19 +52,44 @@ class _EventsPageState extends State<EventsPage> {
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({'title': title, 'date': date}),
+      body: json.encode({'title': title, 'date': date,}),
     );
 
     if (response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event created successfully')),
-      );
-      fetchEvents(); // Refresh the events list after creation
+      final eventId = await json.decode(response.body)['id'];
+      final turl = Uri.parse('https://kcarv-backend.onrender.com/api/events/$eventId/thumbnail');
+      final request = http.MultipartRequest('POST', turl);
+      request.files.add(await http.MultipartFile.fromPath('thumbnail', _image!.path));
+      final tresponse = await request.send();
+      if(tresponse.statusCode==200){
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event created successfully')),
+        );
+        fetchEvents();
+      }
+      else{
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to add thumbnail"))
+        );
+      } // Refresh the events list after creation
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to create event')),
       );
     }
+  }
+
+  Future<void> _pickImage () async {
+    final ImagePicker imagePicker = ImagePicker();
+    final XFile? _pickImage = await imagePicker.pickImage(source: ImageSource.gallery);
+
+
+    if(_pickImage!=null){
+      setState(() {
+        _image = File(_pickImage.path);
+      });
+    }
+
   }
 
   void _showCreateEventDialog() {
@@ -81,9 +110,19 @@ class _EventsPageState extends State<EventsPage> {
               ),
               TextField(
                 controller: dateController,
-                decoration: const InputDecoration(labelText: 'Event Date (yyyy-mm-dd)'),
+                decoration:
+                    const InputDecoration(labelText: 'Event Date (yyyy-mm-dd)'),
                 keyboardType: TextInputType.datetime,
               ),
+              const SizedBox(height: 10,),
+              _image != null ? 
+              Image.file(
+                _image!,
+                height: 30,
+                width: 30,
+              ):
+              Text("No thumbnail added"),
+              ElevatedButton(onPressed: _pickImage, child: Text("Add a thumbnail"))
             ],
           ),
           actions: [
@@ -91,7 +130,7 @@ class _EventsPageState extends State<EventsPage> {
               onPressed: () {
                 final title = titleController.text;
                 final date = dateController.text;
-                if (title.isNotEmpty && date.isNotEmpty) {
+                if (title.isNotEmpty && date.isNotEmpty && _image!=null) {
                   createEvent(title, date);
                   Navigator.of(context).pop();
                 } else {
@@ -112,6 +151,58 @@ class _EventsPageState extends State<EventsPage> {
     );
   }
 
+  Widget eventCard(Event event) {
+    return Card(
+      elevation: 5,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EventDetailPage(event: event),
+            ),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: NetworkImage(
+                        event.thumbnail!), // Thumbnail for the event
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    formatter(event), // Display the formatted date
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(event.status), // Display the event status
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,28 +212,19 @@ class _EventsPageState extends State<EventsPage> {
       drawer: Sidebar(isAdmin: widget.isAdmin),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
+          : GridView.builder(
               padding: const EdgeInsets.all(10),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, // 2 columns in the grid
+                crossAxisSpacing: 10.0,
+                mainAxisSpacing: 10.0,
+                childAspectRatio:
+                    3 / 4, // Adjust this ratio based on your image size
+              ),
               itemCount: events.length,
               itemBuilder: (context, index) {
                 final event = events[index];
-                return Card(
-                  elevation: 5,
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  child: ListTile(
-                    title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('${event.date.substring(0, 10)} - ${event.status}'),
-                    trailing: const Icon(Icons.arrow_forward),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EventDetailPage(event: event),
-                        ),
-                      );
-                    },
-                  ),
-                );
+                return eventCard(event); // Use the eventCard widget
               },
             ),
       floatingActionButton: widget.isAdmin
