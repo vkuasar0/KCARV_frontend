@@ -76,14 +76,16 @@ class _EventDetailPageState extends State<EventDetailPage> {
   Future<void> downloadParticipants() async {
     try {
       // Convert participants to CSV format
-      final csvData = const ListToCsvConverter().convert([widget.event.participants]);
+      final csvData =
+          const ListToCsvConverter().convert([widget.event.participants]);
 
       // Open file save dialog for user to pick location and name
       final result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save Participants CSV',
-        type: FileType.custom,
-        allowedExtensions: ['csv'],
-      );
+          fileName: "${widget.event.title}.csv",
+          dialogTitle: 'Save Participants CSV',
+          type: FileType.custom,
+          allowedExtensions: ['csv'],
+          lockParentWindow: true);
 
       if (result != null) {
         // User picked a file name and location
@@ -111,42 +113,73 @@ class _EventDetailPageState extends State<EventDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.event.title),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: SingleChildScrollView(
+        backgroundColor: Colors.red,
+        appBar: AppBar(
+          backgroundColor: Colors.red,
+          title: Text(widget.event.title),
+        ),
+        body: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.event.title,
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              Text(
-                  '${widget.event.date.substring(0, 10)} - ${widget.event.status}',
-                  style: const TextStyle(fontSize: 18)),
-              const SizedBox(height: 20),
-              _buildParticipantsSection(),
-              const SizedBox(height: 20),
-              _buildLibrarySection(),
+              Padding(
+                padding: const EdgeInsets.all(30),
+                child: SizedBox(
+                    height: 200.0,
+                    width: double.infinity,
+                    child: _buildImageThumbnail() // Replace with actual image
+                    ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 40, bottom: 40, right: 40),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30)
+                  ),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 16,),
+                        _buildLibrarySection(),
+                        const SizedBox(height: 16.0),
+                        _buildParticipantsSection(),
+                        const SizedBox(height: 16.0),
+                        const Text(
+                          'Date',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20
+                          ),
+                        ),
+                        const SizedBox(height: 4.0),
+                        Text(
+                          '${widget.event.date.substring(0, 10)} - ${widget.event.status}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.0,
+                          ),
+                        ),
+                        const SizedBox(height: 16,)
+                      ],
+                    ),
+                ),
+              ),
             ],
           ),
-        ),
-      ),
-    );
+        ));
   }
 
   Widget _buildParticipantsSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        const SizedBox(height: 10),
         const Text('Participants',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(10),
+          width: 200,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey),
             borderRadius: BorderRadius.circular(10),
@@ -155,6 +188,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
         ),
         const SizedBox(height: 10),
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
               onPressed: () => _showEditDialog(
@@ -174,7 +208,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
 
   Widget _buildLibrarySection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const Text('Library',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -190,8 +224,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
             children: widget.event.library
                 .map((url) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: InkWell(
-                        onTap: () => _launchURL(url),
+                      child: TextButton(
+                        onPressed: () => _launchURL(url),
                         child: Text(url,
                             style: const TextStyle(
                                 color: Colors.blue,
@@ -213,7 +247,21 @@ class _EventDetailPageState extends State<EventDetailPage> {
 
   void _launchURL(String url) async {
     final uri = Uri.parse(url);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Couldn\'t find an app to to launch this link')));
+    }
+  }
+
+  Widget _buildImageThumbnail() {
+    String? thumbnail = widget.event.thumbnail;
+    if (thumbnail != null) {
+      return Image.network(thumbnail, fit: BoxFit.fill);
+    } else {
+      return const Center(child: Text('No Image for this event'));
+    }
   }
 
   Future<void> _showEditDialog(String title, TextEditingController controller,
@@ -226,20 +274,21 @@ class _EventDetailPageState extends State<EventDetailPage> {
           content: TextField(
             controller: controller,
             maxLines: null,
-            decoration:
-                InputDecoration(hintText: 'Enter $title separated by commas'),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                onSave();
-              },
-              child: const Text('Save'),
-            ),
-            TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                onSave();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
             ),
           ],
         );

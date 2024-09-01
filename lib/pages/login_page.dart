@@ -68,7 +68,8 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(),
+      backgroundColor: const Color.fromARGB(255, 206, 159, 55),
+      appBar: AppBar(backgroundColor: const Color.fromARGB(255, 206, 159, 55),),
       body: _isLoading? const Center(child: CircularProgressIndicator()): SingleChildScrollView(
         child:  Column(
           mainAxisAlignment: MainAxisAlignment.center,

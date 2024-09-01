@@ -5,6 +5,7 @@ class Event {
   final String status;
   List<String> participants;
   List<String> library;
+  String? thumbnail;
 
   Event({
     required this.id,
@@ -13,6 +14,7 @@ class Event {
     required this.status,
     required this.participants,
     required this.library,
+    required this.thumbnail
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class Event {
       status: json['status'],
       participants: List<String>.from(json['participants']),
       library: List<String>.from(json['library']),
+      thumbnail: json['thumbnail']
     );
   }
 }
