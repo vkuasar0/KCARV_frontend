@@ -62,7 +62,6 @@ class _ProfileState extends State<Profile> {
                 children: [
                   _buildProfileHeader(name, email, role),
                   _buildProfileInfo(name, email),
-                  _buildActionButtons(),
                 ],
               ),
             );
@@ -153,25 +152,26 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15.0),
-          color: Colors.grey.shade300,
-        ),
-        child: TextButton.icon(
-          icon: const Icon(Icons.edit, color: Colors.black),
-          onPressed: () {
-            // Add functionality for Edit Profile
-          },
-          label: const Text(
-            'Change Password',
-            style: TextStyle(fontSize: 20.0, color: Colors.black),
-          ),
-        ),
-      ),
-    );
-  }
+
+  // Widget _buildActionButtons() {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(16.0),
+  //     child: Container(
+  //       decoration: BoxDecoration(
+  //         borderRadius: BorderRadius.circular(15.0),
+  //         color: Colors.grey.shade300,
+  //       ),
+  //       child: TextButton.icon(
+  //         icon: const Icon(Icons.edit, color: Colors.black),
+  //         onPressed: () {
+  //           // Add functionality for Edit Profile
+  //         },
+  //         label: const Text(
+  //           'Change Password',
+  //           style: TextStyle(fontSize: 20.0, color: Colors.black),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 }
