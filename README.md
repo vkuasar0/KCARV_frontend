@@ -1,6 +1,12 @@
 # kcarv_front
 
-A flutter fronted for KCARV app.
+A flutter fronted for KCARV app. 
+
+## Screens
+- Announcements Screen
+- Events Screen
+- Production Design Inventory screen
+- Profile screen
 
 ## Getting Started
 
