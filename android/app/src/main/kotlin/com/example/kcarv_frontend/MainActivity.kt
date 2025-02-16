@@ -1,4 +1,4 @@
-package com.example.kcarv_front
+package com.example.kcarv_frontend
 
 import io.flutter.embedding.android.FlutterActivity
 
